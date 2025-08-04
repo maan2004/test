@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Team & Employee Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Team & Employee Management</h2>
+
+    <div class="button-group">
+      <a class="dashboard-button" href="{{ url_for('main.employee_dashboard') }}">Employee Management</a>
+      <a class="dashboard-button" href="{{ url_for('main.view_teams') }}">Team Management</a>
+    </div>
+
+    <p style="text-align:center;"><a href="{{ url_for('main.dashboard') }}">← Back to Main Dashboard</a></p>
+  </div>
+</body>
+</html>

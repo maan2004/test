@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="form-container">
+    <h2>Admin Login</h2>
+
+    <!-- 🔥 Flash messages here -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <label>Email or Username:</label>
+      <input type="text" name="identifier" required>
+
+      <label>Password:</label>
+      <input type="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <!-- THE FIX: Added 'main.' prefix to the url_for call -->
+    <p>Don't have an account? <a href="{{ url_for('main.signup') }}">Sign up</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Employee</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f7;
+            margin: 0;
+            padding: 20px;
+        }
+        .form-container {
+            background: #fff;
+            max-width: 600px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #555;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: -12px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Add Employee</h2>
+        <form method="POST" id="employeeForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender" required>
+                <option value="" disabled selected>Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="prefer not say"></option>
+            </select>
+
+            <label for="designation">Designation:</label>
+            <select id="designation" name="designation_id" required onchange="updateLeaveLimit()">
+                {% for d in designations %}
+                    <option value="{{ d.id }}" data-leave="{{ d.monthly_leave_allowance }}">{{ d.title }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="shift_preference">Shift Preference:</label>
+            <select id="shift_preference" name="shift_preference">
+                <option value="" disabled selected>Select Preference</option>
+                <option value="Morning">Morning</option>
+                <option value="Afternoon-Evening">Afternoon-Evening</option>
+                <option value="Night">Night</option>
+                <option value="Any">Any</option>
+            </select>
+
+            <label for="leave_dates">Leave Preferences (optional):</label>
+            <input type="text" id="leave_dates" name="leave_dates" placeholder="Select one or more dates">
+            <div class="error-message" id="leaveError" style="display: none;"></div>
+
+            <button type="submit">Add Employee</button>
+        </form>
+        <a href="{{ url_for('main.manage_employees') }}" class="back-link">← Back to Manage Employees</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        let leavePicker;
+        let maxLeaves = 0;
+
+        function updateLeaveLimit() {
+            const designationSelect = document.getElementById('designation');
+            const selected = designationSelect.options[designationSelect.selectedIndex];
+            maxLeaves = parseInt(selected.getAttribute('data-leave')) || 0;
+            updateFlatpickrLimit();
+        }
+
+        function updateFlatpickrLimit() {
+            if (leavePicker) leavePicker.destroy();
+
+            leavePicker = flatpickr("#leave_dates", {
+                mode: "multiple",
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                onChange: function(selectedDates) {
+                    const errorDiv = document.getElementById('leaveError');
+                    const perMonth = {};
+
+                    selectedDates.forEach(date => {
+                        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                        perMonth[monthKey] = (perMonth[monthKey] || 0) + 1;
+                    });
+
+                    const exceeded = Object.values(perMonth).some(count => count > maxLeaves);
+
+                    if (exceeded) {
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerText = `You cannot select more than ${maxLeaves} leaves in a single calendar month.`;
+                        leavePicker.clear();
+                    } else {
+                        errorDiv.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        window.onload = updateLeaveLimit;
+    </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Teams</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      background-color: #eef2f7;
+      font-family: Arial, sans-serif;
+    }
+
+    .form-container {
+      background: #fff;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    form {
+      margin-bottom: 40px;
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .checkbox-list {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 5px;
+      background: #fff;
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-save {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .btn-back a {
+      text-decoration: none;
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+    }
+
+    .btn-back a:hover {
+      background-color: #0056b3;
+    }
+
+    .flash {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+    }
+
+    .flash.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .flash.danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .flash.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Manage Teams</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% for team in teams %}
+    <form method="POST">
+      <h3>Edit Team: {{ team.name }}</h3>
+      <input type="hidden" name="team_id" value="{{ team.id }}">
+      <input type="hidden" name="action" value="update">
+
+      <label>Team Name:</label>
+      <input type="text" name="name" value="{{ team.name }}" required>
+
+      <label>Shift Template:</label>
+      <select name="template" required>
+        {% for t in ['3-shift', '4-shift', '5-shift'] %}
+          <option value="{{ t }}" {% if team.shift_template == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+
+      <label>People per Shift:</label>
+      <input type="number" name="people" value="{{ team.people_per_shift }}" required>
+
+      <label>Team Members:</label>
+      <div class="checkbox-list">
+        {% for e in employee_map[team.id] %}
+          <label>
+            <input type="checkbox" name="members" value="{{ e.id }}"
+              {% if e.id in team_members_map[team.id] %}checked{% endif %}>
+              {{ e.name }} ({{ e.email }})
+          </label><br>
+        {% endfor %}
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+
+    <form method="POST">
+      <input type="hidden" name="team_id" value="{{ team.id }}">
+      <input type="hidden" name="action" value="delete">
+      <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this team?')">Delete</button>
+    </form>
+    {% endfor %}
+
+    <div class="btn-back">
+      <a href="{{ url_for('main.management_dashboard') }}">← Back to Team Management Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Designations</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="form-container">
+    <h2>Manage Designations</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Hierarchy Level</th>
+            <th>Monthly Leaves</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for designation in designations %}
+          <tr>
+            <td>
+              <input type="text" name="title_{{ designation.id }}" value="{{ designation.title }}" required>
+            </td>
+            <td>
+              <input type="number" name="hierarchy_{{ designation.id }}" value="{{ designation.hierarchy_level }}" required>
+            </td>
+            <td>
+              <input type="number" name="leave_{{ designation.id }}" value="{{ designation.monthly_leave_allowance }}" required>
+            </td>
+            <td>
+              <button type="submit" name="delete_id" value="{{ designation.id }}" onclick="return confirm('Are you sure you want to delete this designation?');">🗑️</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <button type="submit">Save All Changes</button>
+    </form>
+
+    <!-- THE FIX: Added 'main.' prefix to the url_for call -->
+    <p style="text-align:center;"><a href="{{ url_for('main.dashboard') }}">← Back to Dashboard</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Employees</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f7;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        form {
+            border: 1px solid #ccc;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 6px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .btn-row {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .save-btn {
+            background-color: #28a745;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            display: none;
+        }
+        .flash.success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+        }
+        .flash.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Manage Employees</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% for e in employees %}
+    <form method="POST">
+        <input type="hidden" name="emp_id" value="{{ e.id }}">
+        <input type="hidden" name="action" value="update">
+
+        <label>Name:</label>
+        <input type="text" name="name" value="{{ e.name }}" required>
+
+        <label>Email:</label>
+        <input type="email" name="email" value="{{ e.email }}" required>
+
+        <label>Gender:</label>
+        <select name="gender" required>
+            <option value="Male" {% if e.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if e.gender == 'Female' %}selected{% endif %}>Female</option>
+        </select>
+
+        <label>Designation:</label>
+        <select name="designation_id" class="designation-select" data-emp-id="{{ e.id }}" required>
+            {% for d in designations %}
+                <option value="{{ d.id }}" data-leave="{{ d.monthly_leave_allowance }}"
+                {% if d.id == e.designation_id %}selected{% endif %}>{{ d.title }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Shift Preference:</label>
+        <select name="shift_preference">
+            <option value="" {% if not e.shift_preference %}selected{% endif %}>Select Preference</option>
+            <option value="Morning" {% if e.shift_preference == 'Morning' %}selected{% endif %}>Morning</option>
+            <option value="Afternoon-Evening" {% if e.shift_preference == 'Afternoon-Evening' %}selected{% endif %}>Afternoon-Evening</option>
+            <option value="Night" {% if e.shift_preference == 'Night' %}selected{% endif %}>Night</option>
+            <option value="Any" {% if e.shift_preference == 'Any' %}selected{% endif %}>Any</option>
+        </select>
+
+        <label>Leave Dates (optional):</label>
+        <input type="text" name="leave_dates" id="leave_dates_{{ e.id }}" 
+               value="{{ e.leave_dates_formatted | join(', ') }}" placeholder="YYYY-MM-DD">
+        <div class="error-message" id="leaveError_{{ e.id }}"></div>
+
+        <div class="btn-row">
+            <button type="submit" class="save-btn">Save</button>
+        </div>
+    </form>
+
+    <form method="POST" style="display: inline;">
+        <input type="hidden" name="emp_id" value="{{ e.id }}">
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="delete-btn" onclick="return confirm('Delete this employee?')">Delete</button>
+    </form>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    function getMonthKey(date) {
+        return date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0');
+    }
+
+    function countLeavesByMonth(dates) {
+        const map = {};
+        for (let d of dates) {
+            const month = getMonthKey(new Date(d));
+            map[month] = (map[month] || 0) + 1;
+        }
+        return map;
+    }
+
+    document.querySelectorAll("input[id^='leave_dates_']").forEach(input => {
+        const empId = input.id.split('_')[2];
+        const errorDiv = document.getElementById('leaveError_' + empId);
+        const designationSelect = document.querySelector(`select[data-emp-id='${empId}']`);
+        let maxLeaves = parseInt(designationSelect.selectedOptions[0].getAttribute("data-leave")) || 0;
+
+        designationSelect.addEventListener('change', () => {
+            maxLeaves = parseInt(designationSelect.selectedOptions[0].getAttribute("data-leave")) || 0;
+        });
+
+        flatpickr(input, {
+            mode: "multiple",
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            onChange: function(selectedDates, dateStr, instance) {
+                const countMap = countLeavesByMonth(selectedDates);
+                const exceeded = Object.values(countMap).some(c => c > maxLeaves);
+                if (exceeded) {
+                    errorDiv.innerText = `Maximum ${maxLeaves} leave(s) per month allowed.`;
+                    errorDiv.style.display = 'block';
+                    instance.clear();
+                } else {
+                    errorDiv.innerText = '';
+                    errorDiv.style.display = 'none';
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

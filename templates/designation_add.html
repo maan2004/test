@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Designation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="form-container">
+    <h2>Add Designation</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <label>Designation Title:</label>
+      <input type="text" name="title" required>
+
+      <label>Hierarchy Level (lower = higher):</label>
+      <input type="number" name="hierarchy" required>
+
+      <label>Monthly Leave Allowance:</label>
+      <input type="number" name="leave" required>
+
+      <button type="submit">Add Designation</button>
+    </form>
+    <!-- THE FIX: Added 'main.' prefix to the url_for call -->
+    <p><a href="{{ url_for('main.manage_designation') }}">Manage Designations</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .usage-stats {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .usage-item {
+      text-align: center;
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+    .usage-value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .usage-label {
+      font-size: 0.9em;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+    .usage-warning {
+      background-color: #fff3cd;
+      border-color: #ffeaa7;
+    }
+    .usage-danger {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+    }
+    .new-feature {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Welcome, {{ user.username }}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Usage Statistics Panel -->
+    <div class="usage-stats">
+      <h3>📊 API Usage & Cost Summary</h3>
+      <div class="usage-grid">
+        <div class="usage-item {% if usage_stats.daily_cost >= usage_stats.daily_limit * 0.8 %}usage-warning{% endif %}">
+          <div class="usage-value">${{ "%.2f"|format(usage_stats.daily_cost) }}</div>
+          <div class="usage-label">Today's Cost<br><small>Limit: ${{ "%.2f"|format(usage_stats.daily_limit) }}</small></div>
+        </div>
+        <div class="usage-item {% if usage_stats.monthly_cost >= usage_stats.monthly_limit * 0.8 %}usage-warning{% endif %}">
+          <div class="usage-value">${{ "%.2f"|format(usage_stats.monthly_cost) }}</div>
+          <div class="usage-label">Monthly Cost<br><small>Limit: ${{ "%.2f"|format(usage_stats.monthly_limit) }}</small></div>
+        </div>
+        <div class="usage-item">
+          <div class="usage-value">{{ ((usage_stats.daily_limit - usage_stats.daily_cost) / usage_stats.daily_limit * 100)|round|int }}%</div>
+          <div class="usage-label">Daily Budget<br>Remaining</div>
+        </div>
+        <div class="usage-item">
+          <div class="usage-value">{{ ((usage_stats.monthly_limit - usage_stats.monthly_cost) / usage_stats.monthly_limit * 100)|round|int }}%</div>
+          <div class="usage-label">Monthly Budget<br>Remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-links">
+      <a class="dashboard-button" href="{{ url_for('main.add_designation') }}">Designation Management</a>
+      <a class="dashboard-button" href="{{ url_for('main.management_dashboard') }}">Team & Employee Management</a>
+      <a class="dashboard-button" href="{{ url_for('main.generate_schedule') }}">Generate Rota</a>
+      
+      <!-- New Enhanced Features -->
+      <a class="dashboard-button new-feature" href="{{ url_for('main.batch_generate') }}">🚀 Batch Generate Schedules</a>
+      <a class="dashboard-button new-feature" href="{{ url_for('main.schedule_analytics') }}">📈 Schedule Analytics</a>
+      <a class="dashboard-button" href="{{ url_for('main.api_usage_report') }}">💰 Cost & Usage Report</a>
+    </div>
+
+    <div style="margin-top: 20px; padding: 10px; background-color: #e7f3ff; border-radius: 6px; font-size: 0.9em;">
+      <strong>🆕 New Features:</strong>
+      <ul style="margin: 5px 0; padding-left: 20px;">
+        <li>Historical state management prevents rule violations</li>
+        <li>Enhanced AI validation with specific violation reports</li>
+        <li>Cost control and rate limiting</li>
+        <li>Emergency fallback schedules</li>
+        <li>Batch processing for multiple teams</li>
+      </ul>
+    </div>
+
+    <a href="{{ url_for('main.logout') }}" style="display: block; text-align: center; margin-top: 15px;">Logout</a>
+  </div>
+</body>
+</html>

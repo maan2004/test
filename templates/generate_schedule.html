@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced Rota Management</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f7f9; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            background: #fff; 
+            max-width: 1200px; 
+            margin: auto; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.07); 
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .cost-warning-panel {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .cost-danger-panel {
+            background: linear-gradient(135deg, #ff7675, #e17055);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .enhanced-features {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .validation-panel {
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid;
+        }
+        .validation-success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .validation-error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .validation-warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .violation-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.05);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-warning { background-color: #f39c12; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-info { background-color: #17a2b8; color: white; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        h2, h3 { text-align: center; color: #2c3e50; }
+        h3 { margin-top: 40px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        label { font-weight: 600; margin-bottom: 5px; display: block; }
+        select, input, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px; 
+            margin-bottom: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc; 
+            box-sizing: border-box; 
+        }
+        .back-link { display: block; margin-top: 30px; text-align: center; color: #555; text-decoration: none; }
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 6px; text-align: center; }
+        .flash.info { background-color: #cce5ff; color: #004085; }
+        .flash.warning { background-color: #fff3cd; color: #856404; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; }
+        .flash.success { background-color: #d4edda; color: #155724; }
+
+        /* Enhanced Card Styles */
+        .shift-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .shift-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .shift-card:hover {
+            transform: translateY(-5px);
+        }
+        .shift-card h4 { 
+            margin: 0; 
+            padding: 18px 25px; 
+            color: #fff; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 1.1em;
+        }
+        .card-section { padding: 20px 25px; }
+        .card-section h5 { 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            color: #95a5a6; 
+            margin-top: 0; 
+            margin-bottom: 15px; 
+            letter-spacing: 0.5px;
+        }
+        .employee-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        .employee-list li { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #ecf0f1; 
+        }
+        .employee-list li:last-child { border-bottom: none; }
+        .employee-name { font-weight: 500; color: #2c3e50; }
+        .employee-designation { 
+            font-size: 0.8em; 
+            color: #7f8c8d; 
+            background-color: #ecf0f1; 
+            padding: 4px 10px; 
+            border-radius: 15px; 
+        }
+        .no-data-text { 
+            color: #95a5a6; 
+            font-style: italic; 
+            font-size: 0.9em; 
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h2>🗓️ Enhanced Rota Management & AI Validation</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('main.batch_generate') }}" class="btn btn-info">Batch Generate</a>
+                <a href="{{ url_for('main.schedule_analytics') }}" class="btn btn-success">Analytics</a>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- Cost Warning Panels -->
+        {% if cost_warnings %}
+            <div class="cost-warning-panel">
+                <h4>💰 Cost Usage Warnings</h4>
+                {% for warning in cost_warnings %}
+                    <p>⚠️ {{ warning }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Enhanced Features Info -->
+        <div class="enhanced-features">
+            <h4>🚀 Enhanced Features Active</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">✓</div>
+                    <div class="stat-label">Historical State Management</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">✓</div>
+                    <div class="stat-label">Rule Violation Detection</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">✓</div>
+                    <div class="stat-label">Cost Control</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">✓</div>
+                    <div class="stat-label">Emergency Fallback</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Selection Form -->
+        <form method="GET" id="team-select-form">
+            <label for="team_id_select">Select a Team to View or Manage Schedule:</label>
+            <select id="team_id_select" name="team_id" onchange="this.form.submit()">
+                <option value="">-- Choose a team --</option>
+                {% for team in teams %}
+                    <option value="{{ team.id }}" {% if selected_team and team.id == selected_team.id %}selected{% endif %}>
+                        {{ team.name }} ({{ team.members|length }} members, {{ team.shift_template }})
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <!-- Team-specific content -->
+        {% if selected_team %}
+            <hr style="margin-top: 30px;">
+            
+            {% if schedule_exists %}
+                <h3>📋 Current Schedule for {{ selected_team.name }}</h3>
+                
+                <!-- Enhanced AI Validation Report -->
+                {% if ai_validation_report %}
+                    <div class="validation-panel 
+                        {% if ai_validation_report.is_valid %}validation-success
+                        {% elif ai_validation_report.get('severity') == 'high' %}validation-error
+                        {% else %}validation-warning{% endif %}">
+                        
+                        <h4>
+                            🤖 AI Validation Report: 
+                            {% if ai_validation_report.is_valid %}
+                                ✅ All Rules Passed ({{ ai_validation_report.get('total_violations', 0) }} violations)
+                            {% else %}
+                                ❌ {{ ai_validation_report.get('total_violations', 0) }} Violations Found 
+                                (Severity: {{ ai_validation_report.get('severity', 'unknown')|title }})
+                            {% endif %}
+                        </h4>
+                        
+                        {% if ai_validation_report.violations %}
+                            <details>
+                                <summary style="cursor: pointer; font-weight: bold; margin: 10px 0;">
+                                    View Detailed Violations ({{ ai_validation_report.violations|length }})
+                                </summary>
+                                <div class="violation-list">
+                                    {% for violation in ai_validation_report.violations %}
+                                        <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                            🔸 {{ violation }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </details>
+                        {% endif %}
+                        
+                        {% if ai_validation_report.get('recommendations') %}
+                            <div style="margin-top: 15px;">
+                                <strong>💡 AI Recommendations:</strong>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    {% for rec in ai_validation_report.recommendations %}
+                                        <li>{{ rec }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="action-buttons" style="margin-top: 20px;">
+                            {% if not ai_validation_report.is_valid %}
+                                <form action="{{ url_for('main.fix_schedule', team_id=selected_team.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-warning">🔧 AI Auto-Fix</button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ url_for('main.emergency_schedule', team_id=selected_team.id) }}" class="btn btn-info">🚨 Emergency Schedule</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Schedule Management Actions -->
+                <div class="action-buttons">
+                    <form action="{{ url_for('main.delete_schedule', team_id=selected_team.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('⚠️ This will permanently delete the schedule and all validation history. Continue?');">
+                        <button type="submit" class="btn btn-danger">🗑️ Delete Schedule</button>
+                    </form>
+                </div>
+
+                <!-- Display Schedule with Enhanced UI -->
+                {% set shift_order = ['Early Morning', 'Morning', 'Afternoon', 'Evening', 'Night'] %}
+                {% for month_name, shifts in schedule_by_month.items() %}
+                    <div style="margin: 40px 0;">
+                        <h4 style="text-align: center; color: #2c3e50; font-size: 1.3em; margin-bottom: 25px;">
+                            📅 {{ month_name }}
+                        </h4>
+                        <div class="shift-cards-container">
+                            {% for shift_name in shift_order %}
+                                {% if shift_name in shifts %}
+                                    {% set data = shifts[shift_name] %}
+                                    <div class="shift-card">
+                                        <h4>
+                                            {% if shift_name == 'Morning' %}🌅
+                                            {% elif shift_name == 'Afternoon' %}☀️
+                                            {% elif shift_name == 'Evening' %}🌇
+                                            {% elif shift_name == 'Night' %}🌙
+                                            {% elif shift_name == 'Early Morning' %}🌄
+                                            {% endif %}
+                                            {{ shift_name }} Shift
+                                        </h4>
+                                        
+                                        <div class="card-section">
+                                            <h5>👥 Fixed Staff ({{ data.assigned_staff|length }})</h5>
+                                            {% if data.assigned_staff %}
+                                                <ul class="employee-list">
+                                                    {% for employee in data.assigned_staff %}
+                                                    <li>
+                                                        <span class="employee-name">{{ employee.name }}</span>
+                                                        <span class="employee-designation">{{ employee.designation }}</span>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <div class="no-data-text">⚠️ Understaffed - No Fixed Staff Assigned</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="card-section" style="background-color: #f8f9f9;">
+                                            <h5>🔄 Backup Floaters ({{ data.floaters|length }})</h5>
+                                            {% if data.floaters %}
+                                                <ul class="employee-list">
+                                                    {% for floater in data.floaters %}
+                                                    <li>
+                                                        <span class="employee-name">{{ floater.name }}</span>
+                                                        <span class="employee-designation">{{ floater.designation }}</span>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <div class="no-data-text">ℹ️ No Backup Floaters Assigned</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+            {% else %}
+                <!-- Generate New Schedule Section -->
+                <h3>🎯 Generate New Schedule for {{ selected_team.name }}</h3>
+                
+                <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h4>📊 Team Overview</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ selected_team.members|selectattr("employee.is_active")|list|length }}</div>
+                            <div class="stat-label">Active Members</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ selected_team.shift_template }}</div>
+                            <div class="stat-label">Shift Template</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ selected_team.people_per_shift }}</div>
+                            <div class="stat-label">People/Shift</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ (selected_team.members|selectattr("employee.is_active")|list|length) - (selected_team.people_per_shift * ({'3-shift': 3, '4-shift': 4, '5-shift': 5}[selected_team.shift_template] or 3)) }}</div>
+                            <div class="stat-label">Available Floaters</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('main.generate_schedule') }}" method="POST">
+                    <input type="hidden" name="team_id" value="{{ selected_team.id }}">
+                    
+                    <label for="months">📅 Number of Months to Generate:</label>
+                    <select id="months" name="months" required>
+                        <option value="1">1 Month (Recommended for testing)</option>
+                        <option value="2">2 Months</option>
+                        <option value="3">3 Months (Full stability cycle)</option>
+                        <option value="6">6 Months (Extended planning)</option>
+                        <option value="12">12 Months (Annual planning - High cost)</option>
+                    </select>
+
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                        <h5>💡 Generation Tips:</h5>
+                        <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.9em;">
+                            <li>Start with 1 month to test and validate rules</li>
+                            <li>Longer periods provide better stability but cost more</li>
+                            <li>The system will check rate limits and cost thresholds</li>
+                            <li>Historical data improves accuracy over time</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1em;">
+                        🚀 Generate Enhanced Schedule with AI Validation
+                    </button>
+                </form>
+                
+                <!-- Alternative Generation Options -->
+                <div class="action-buttons" style="margin-top: 20px;">
+                    <a href="{{ url_for('main.emergency_schedule', team_id=selected_team.id) }}" class="btn btn-warning">
+                        🚨 Generate Emergency Schedule (No AI)
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Quick Actions Footer -->
+        <div style="margin-top: 50px; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h4>🔗 Quick Actions</h4>
+            <div class="action-buttons" style="justify-content: center;">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-info">← Dashboard</a>
+                <a href="{{ url_for('main.schedule_analytics') }}" class="btn btn-success">📈 Analytics</a>
+                <a href="{{ url_for('main.api_usage_report') }}" class="btn btn-warning">💰 Usage Report</a>
+                <a href="{{ url_for('main.batch_generate') }}" class="btn btn-primary">⚡ Batch Generate</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {% if ai_validation_report and not ai_validation_report.is_valid %}
+        setTimeout(function() {
+            if (confirm('Schedule has violations. Refresh to check for updates?')) {
+                window.location.reload();
+            }
+        }, 30000);
+        {% endif %}
+
+        // Confirmation for high-cost operations
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthsSelect = document.getElementById('months');
+            const generateBtn = document.querySelector('button[type="submit"]');
+            
+            if (monthsSelect && generateBtn) {
+                monthsSelect.addEventListener('change', function() {
+                    const months = parseInt(this.value);
+                    if (months >= 6) {
+                        generateBtn.style.background = '#e74c3c';
+                        generateBtn.innerHTML = '⚠️ High Cost Generation - ' + months + ' Months';
+                    } else if (months >= 3) {
+                        generateBtn.style.background = '#f39c12';
+                        generateBtn.innerHTML = '💰 Medium Cost Generation - ' + months + ' Months';
+                    } else {
+                        generateBtn.style.background = '#3498db';
+                        generateBtn.innerHTML = '🚀 Generate Enhanced Schedule - ' + months + ' Month(s)';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

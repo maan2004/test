@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome - Shift Rota System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .welcome-container {
+            text-align: center;
+        }
+        .dashboard-button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .dashboard-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container welcome-container">
+        <h2>Shift Rota Management System</h2>
+        <p>Please log in or sign up to manage your team schedules.</p>
+        
+        <div class="dashboard-links">
+            <!-- THE FIX: Added 'main.' prefix to all url_for calls -->
+            <a class="dashboard-button" href="{{ url_for('main.login') }}">Login</a>
+            <a class="dashboard-button" href="{{ url_for('main.signup') }}">Sign Up</a>
+        </div>
+    </div>
+</body>
+</html>

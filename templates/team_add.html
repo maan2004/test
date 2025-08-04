@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Team</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .error-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+    .flash.success { color: green; }
+    .flash.danger { color: red; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Add Team</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% if employees %}
+    <form method="POST" onsubmit="return validateTeamForm()">
+      <label>Team Name:</label>
+      <input type="text" name="name" required>
+
+      <label>Shift Template:</label>
+      <select name="template" id="template" required onchange="updateRequirement()">
+        <option value="3-shift">3-Shift</option>
+        <option value="4-shift">4-Shift</option>
+        <option value="5-shift">5-Shift</option>
+      </select>
+
+      <label>People per Shift:</label>
+      <input type="number" name="people" id="people" min="1" value="1" required oninput="updateRequirement()">
+
+      <label>Team Members:</label>
+      <div id="member-box" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 8px;">
+        {% for e in employees %}
+          <label>
+            <input type="checkbox" name="members" value="{{ e.id }}" data-gender="{{ e.gender }}" onchange="updateRequirement()">
+            {{ e.name }} ({{ e.email }}) — {{ e.gender }}
+          </label><br>
+        {% endfor %}
+      </div>
+
+      <div class="error-message" id="memberError"></div>
+
+      <button type="submit" id="submitBtn">Add Team</button>
+    </form>
+    {% else %}
+      <p>No unassigned employees available. Please add employees first.</p>
+    {% endif %}
+
+    <p style="text-align:center;"><a href="{{ url_for('main.view_teams') }}">← Back to Team List</a></p>
+  </div>
+
+  <script>
+    function updateRequirement() {
+      const template = document.getElementById('template').value;
+      const people = parseInt(document.getElementById('people').value) || 0;
+      const checkboxes = document.querySelectorAll("input[name='members']:checked");
+      const allBoxes = document.querySelectorAll("input[name='members']");
+
+      const maleCount = Array.from(checkboxes).filter(cb => cb.dataset.gender === 'Male').length;
+      const femaleCount = Array.from(checkboxes).filter(cb => cb.dataset.gender === 'Female').length;
+
+      const shiftMap = {
+        '3-shift': 3,
+        '4-shift': 4,
+        '5-shift': 5
+      };
+      const required = shiftMap[template] * people;
+      const selected = checkboxes.length;
+
+      const errorDiv = document.getElementById('memberError');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (selected < required) {
+        errorDiv.innerText = `Select at least ${required} members for ${template} with ${people} per shift.`;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = true;
+      } else if (maleCount < 2 && femaleCount < 2) {
+        errorDiv.innerText = `Team must include at least 2 members from the opposite gender.`;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = true;
+      } else {
+        errorDiv.innerText = '';
+        errorDiv.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    }
+
+    function validateTeamForm() {
+      updateRequirement();
+      return document.getElementById('memberError').innerText === '';
+    }
+
+    window.onload = updateRequirement;
+  </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Schedule Analytics & Violations</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f7f9; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            background: #fff; 
+            max-width: 1400px; 
+            margin: auto; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.07); 
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .team-analytics {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .team-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .violation-count {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .violation-count.low { background: #27ae60; }
+        .violation-count.medium { background: #f39c12; }
+        .violation-count.high { background: #e74c3c; }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .violations-section {
+            margin-top: 20px;
+        }
+        .violation-item {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9em;
+        }
+        .violation-item.resolved {
+            background: #f0fff4;
+            border-left-color: #27ae60;
+        }
+        
+        .validation-logs {
+            margin-top: 20px;
+        }
+        .log-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 3px solid #17a2b8;
+            font-size: 0.85em;
+        }
+        .log-item.invalid {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .summary-dashboard {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .summary-label {
+            font-size: 0.9em;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-warning { background-color: #f39c12; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align: center; color: #2c3e50; margin-bottom: 10px;">
+            📊 Schedule Analytics & Rule Violations Dashboard
+        </h2>
+        <p style="text-align: center; color: #6c757d; margin-bottom: 30px;">
+            Comprehensive analysis of scheduling performance and rule compliance across all teams
+        </p>
+
+        <!-- Overall Summary Dashboard -->
+        <div class="summary-dashboard">
+            <h3 style="margin-top: 0; text-align: center;">🎯 System-Wide Summary</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-value">{{ analytics_data|length }}</div>
+                    <div class="summary-label">Active Teams</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">
+                        {{ analytics_data.values()|sum(attribute='total_violations') }}
+                    </div>
+                    <div class="summary-label">Total Violations</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">
+                        {{ analytics_data.values()|selectattr('last_validation')|list|length }}
+                    </div>
+                    <div class="summary-label">Teams with Schedules</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">
+                        {{ analytics_data.values()|selectattr('last_validation.is_valid')|list|length }}
+                    </div>
+                    <div class="summary-label">Compliant Teams</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Analytics Grid -->
+        <div class="analytics-grid">
+            {% for team_id, data in analytics_data.items() %}
+            <div class="team-analytics">
+                <div class="team-header">
+                    <div class="team-name">{{ data.team.name }}</div>
+                    <div class="violation-count {% if data.total_violations == 0 %}low{% elif data.total_violations < 5 %}medium{% else %}high{% endif %}">
+                        {{ data.total_violations }} violations
+                    </div>
+                </div>
+
+                <!-- Team Statistics -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-value">{{ data.team.members|length }}</div>
+                        <div class="stat-label">Members</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ data.team.shift_template }}</div>
+                        <div class="stat-label">Template</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{{ data.validation_logs|length }}</div>
+                        <div class="stat-label">Validations</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${{ "%.2f"|format(data.api_usage|sum(attribute='cost_estimate')) }}</div>
+                        <div class="stat-label">API Costs</div>
+                    </div>
+                </div>
+
+                <!-- Recent Violations -->
+                {% if data.violations %}
+                <div class="violations-section">
+                    <h4 style="color: #e74c3c; margin-bottom: 15px;">⚠️ Recent Violations</h4>
+                    {% for violation in data.violations[:3] %}
+                    <div class="violation-item {% if violation.resolved %}resolved{% endif %}">
+                        <strong>Rule {{ violation.rule_number }}:</strong> {{ violation.rule_description }}<br>
+                        <small style="color: #6c757d;">
+                            {{ violation.violation_detail }} 
+                            ({{ violation.created_at.strftime('%Y-%m-%d %H:%M') }})
+                            {% if violation.resolved %}✅ Resolved{% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if data.violations|length > 3 %}
+                    <p style="text-align: center; margin-top: 10px;">
+                        <small>... and {{ data.violations|length - 3 }} more violations</small>
+                    </p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 6px; text-align: center; margin: 15px 0;">
+                    ✅ No rule violations detected!
+                </div>
+                {% endif %}
+
+                <!-- Validation History -->
+                {% if data.validation_logs %}
+                <div class="validation-logs">
+                    <h4 style="color: #17a2b8; margin-bottom: 15px;">🔍 Recent Validations</h4>
+                    {% for log in data.validation_logs[:3] %}
+                    <div class="log-item {% if not log.is_valid %}invalid{% endif %}">
+                        {% if log.is_valid %}✅{% else %}❌{% endif %}
+                        {{ log.violations_found }} violations found
+                        <span style="float: right; color: #6c757d;">
+                            {{ log.validated_at.strftime('%m/%d %H:%M') }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Quick Actions -->
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="{{ url_for('main.generate_schedule', team_id=data.team.id) }}" 
+                       class="btn btn-primary">View Schedule</a>
+                    {% if data.total_violations > 0 %}
+                    <a href="{{ url_for('main.fix_schedule', team_id=data.team.id) }}" 
+                       class="btn btn-warning">Auto-Fix</a>
+                    {% endif %}
+                    <a href="{{ url_for('main.emergency_schedule', team_id=data.team.id) }}" 
+                       class="btn btn-success">Emergency</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not analytics_data %}
+        <div style="text-align: center; padding: 60px; color: #6c757d;">
+            <h3>📋 No Teams Found</h3>
+            <p>Create some teams and generate schedules to see analytics here.</p>
+            <a href="{{ url_for('main.add_team') }}" class="btn btn-primary">Create First Team</a>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h4>🔧 System Actions</h4>
+            <a href="{{ url_for('main.batch_generate') }}" class="btn btn-primary">Batch Generate</a>
+            <a href="{{ url_for('main.api_usage_report') }}" class="btn btn-warning">Usage Report</a>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-success">← Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 2 minutes to show updated analytics
+        setTimeout(function() {
+            window.location.reload();
+        }, 120000);
+
+        // Add click handlers for violation items to mark as resolved
+        document.querySelectorAll('.violation-item:not(.resolved)').forEach(item => {
+            item.style.cursor = 'pointer';
+            item.title = 'Click to mark as resolved';
+            item.addEventListener('click', function() {
+                if (confirm('Mark this violation as resolved?')) {
+                    // In a real implementation, you'd send an AJAX request here
+                    this.classList.add('resolved');
+                    this.innerHTML += ' <small style="color: #27ae60;">✅ Marked as resolved</small>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 20px; /* space between buttons */
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Employee Management</h2>
+
+    <div class="button-group">
+      <a class="dashboard-button" href="{{ url_for('main.add_employee') }}">Add Employee</a>
+      <a class="dashboard-button" href="{{ url_for('main.manage_employees') }}">Manage Employees</a>
+    </div>
+
+    <p style="text-align:center;"><a href="{{ url_for('main.management_dashboard') }}">← Back</a></p>
+  </div>
+</body>
+</html>
