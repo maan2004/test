@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batch Schedule Generation</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f7f9; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            background: #fff; 
+            max-width: 900px; 
+            margin: auto; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.07); 
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        .cost-estimate {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .cost-warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .team-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .team-card:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
+        }
+        .team-card input[type="checkbox"] {
+            transform: scale(1.5);
+            margin-right: 15px;
+        }
+        .team-card.selected {
+            border-color: #27ae60;
+            background: #f8fff9;
+        }
+        .team-card.has-schedule {
+            border-color: #f39c12;
+            background: #fffbf0;
+        }
+        .team-card.has-schedule .status-badge {
+            background: #f39c12;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            float: right;
+        }
+        .team-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .team-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .team-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .controls-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .batch-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-success { background-color: #27ae60; color: white; }
+        .btn-warning { background-color: #f39c12; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn:disabled { 
+            background-color: #6c757d; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        .progress-section {
+            display: none;
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .flash { 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            border-radius: 6px; 
+            text-align: center; 
+        }
+        .flash.success { background-color: #d4edda; color: #155724; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; }
+        .flash.warning { background-color: #fff3cd; color: #856404; }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h2>⚡ Batch Schedule Generation</h2>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">
+                Generate schedules for multiple teams efficiently with cost controls and progress tracking
+            </p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" id="batchForm">
+            <!-- Team Selection Section -->
+            <div class="controls-section">
+                <h3 style="margin-top: 0; color: #2c3e50;">📋 Select Teams for Batch Generation</h3>
+                
+                <div class="summary-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalTeams">{{ teams|length }}</div>
+                        <div class="stat-label">Total Teams</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="selectedCount">0</div>
+                        <div class="stat-label">Selected</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="existingSchedules">{{ teams|selectattr('saved_schedule')|list|length }}</div>
+                        <div class="stat-label">Have Schedules</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="estimatedCost">$0.00</div>
+                        <div class="stat-label">Est. Cost</div>
+                    </div>
+                </div>
+
+                <div class="batch-controls">
+                    <button type="button" id="selectAll" class="btn btn-secondary">Select All Available</button>
+                    <button type="button" id="selectNone" class="btn btn-secondary">Clear Selection</button>
+                    <button type="button" id="selectWithoutSchedules" class="btn btn-primary">Select Teams Without Schedules</button>
+                </div>
+            </div>
+
+            <!-- Team Grid -->
+            <div class="team-grid">
+                {% for team in teams %}
+                <div class="team-card {% if team.saved_schedule %}has-schedule{% endif %}" data-team-id="{{ team.id }}">
+                    <div class="team-header">
+                        <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                            <input type="checkbox" name="team_ids" value="{{ team.id }}" 
+                                   {% if team.saved_schedule %}disabled title="Schedule already exists"{% endif %}>
+                            <span class="team-name">{{ team.name }}</span>
+                        </label>
+                        {% if team.saved_schedule %}
+                            <span class="status-badge">Has Schedule</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="team-details">
+                        <div class="detail-item">
+                            <span>👥 Members:</span>
+                            <span>{{ team.members|selectattr("employee.is_active")|list|length }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>🔄 Template:</span>
+                            <span>{{ team.shift_template }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>👤 Per Shift:</span>
+                            <span>{{ team.people_per_shift }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>🔄 Floaters:</span>
+                            <span>{{ (team.members|selectattr("employee.is_active")|list|length) - (team.people_per_shift * ({'3-shift': 3, '4-shift': 4, '5-shift': 5}[team.shift_template] or 3)) }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if team.saved_schedule %}
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(243, 156, 18, 0.1); border-radius: 6px; font-size: 0.9em;">
+                        ⚠️ Schedule exists - Generated on {{ team.saved_schedule.generated_on.strftime('%Y-%m-%d') }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if not teams %}
+            <div style="text-align: center; padding: 60px; color: #6c757d;">
+                <h3>📋 No Teams Available</h3>
+                <p>You need to create teams before you can generate schedules in batch.</p>
+                <a href="{{ url_for('main.add_team') }}" class="btn btn-primary">Create First Team</a>
+            </div>
+            {% else %}
+
+            <!-- Generation Options -->
+            <div class="controls-section">
+                <h3 style="margin-top: 0; color: #2c3e50;">⚙️ Generation Options</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label for="months">📅 Months to Generate:</label>
+                        <select id="months" name="months" required>
+                            <option value="1">1 Month (Recommended for batch)</option>
+                            <option value="2">2 Months</option>
+                            <option value="3">3 Months (High cost)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎯 Batch Strategy:</label>
+                        <select id="strategy" name="strategy">
+                            <option value="sequential">Sequential (Safer, slower)</option>
+                            <option value="parallel">Parallel (Faster, higher cost)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cost Estimation -->
+                <div class="cost-estimate" id="costEstimate">
+                    <h4 style="margin-top: 0;">💰 Cost Estimation</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong>Selected Teams:</strong> <span id="costTeams">0</span>
+                        </div>
+                        <div>
+                            <strong>Months:</strong> <span id="costMonths">1</span>
+                        </div>
+                        <div>
+                            <strong>Estimated Cost:</strong> <span id="costTotal">$0.00</span>
+                        </div>
+                        <div>
+                            <strong>Estimated Time:</strong> <span id="costTime">0 min</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; font-size: 0.9em; color: #6c757d;">
+                        💡 Actual costs may vary based on team complexity and AI processing time.
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" id="generateBtn" class="btn btn-success" disabled>
+                        🚀 Start Batch Generation
+                    </button>
+                    <button type="button" id="previewBtn" class="btn btn-primary">
+                        👁️ Preview Generation Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Section (Hidden initially) -->
+            <div class="progress-section" id="progressSection">
+                <h4>⏳ Generation Progress</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">Preparing batch generation...</div>
+                <div id="progressDetails" style="margin-top: 15px; font-size: 0.9em; color: #6c757d;"></div>
+            </div>
+            {% endif %}
+        </form>
+
+        <!-- Back Navigation -->
+        <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <a href="{{ url_for('main.generate_schedule') }}" class="btn btn-primary">← Single Team Generation</a>
+            <a href="{{ url_for('main.schedule_analytics') }}" class="btn btn-warning">📊 View Analytics</a>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-success">🏠 Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Cost estimation constants
+        const COST_PER_TEAM_MONTH = 0.05; // Rough estimate
+        const TIME_PER_TEAM = 30; // seconds
+        
+        // DOM elements
+        const checkboxes = document.querySelectorAll('input[name="team_ids"]:not([disabled])');
+        const selectedCountEl = document.getElementById('selectedCount');
+        const estimatedCostEl = document.getElementById('estimatedCost');
+        const generateBtn = document.getElementById('generateBtn');
+        const monthsSelect = document.getElementById('months');
+        const costEstimateDiv = document.getElementById('costEstimate');
+        
+        // Event listeners
+        document.getElementById('selectAll').addEventListener('click', () => {
+            checkboxes.forEach(cb => cb.checked = true);
+            updateCostEstimate();
+        });
+        
+        document.getElementById('selectNone').addEventListener('click', () => {
+            checkboxes.forEach(cb => cb.checked = false);
+            updateCostEstimate();
+        });
+        
+        document.getElementById('selectWithoutSchedules').addEventListener('click', () => {
+            checkboxes.forEach(cb => {
+                const teamCard = cb.closest('.team-card');
+                cb.checked = !teamCard.classList.contains('has-schedule');
+            });
+            updateCostEstimate();
+        });
+        
+        // Update cost estimate when selection changes
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateCostEstimate);
+        });
+        
+        monthsSelect.addEventListener('change', updateCostEstimate);
+        
+        // Team card click handling
+        document.querySelectorAll('.team-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = card.querySelector('input[type="checkbox"]');
+                    if (!checkbox.disabled) {
+                        checkbox.checked = !checkbox.checked;
+                        updateCostEstimate();
+                    }
+                }
+            });
+        });
+        
+        // Update visual feedback for selected cards
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const card = cb.closest('.team-card');
+                card.classList.toggle('selected', cb.checked);
+            });
+        });
+        
+        function updateCostEstimate() {
+            const selectedTeams = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const months = parseInt(monthsSelect.value);
+            const estimatedCost = selectedTeams * months * COST_PER_TEAM_MONTH;
+            const estimatedTime = Math.ceil((selectedTeams * TIME_PER_TEAM) / 60);
+            
+            selectedCountEl.textContent = selectedTeams;
+            estimatedCostEl.textContent = `${estimatedCost.toFixed(2)}`;
+            
+            // Update detailed cost breakdown
+            document.getElementById('costTeams').textContent = selectedTeams;
+            document.getElementById('costMonths').textContent = months;
+            document.getElementById('costTotal').textContent = `${estimatedCost.toFixed(2)}`;
+            document.getElementById('costTime').textContent = `${estimatedTime} min`;
+            
+            // Update cost estimate panel styling
+            costEstimateDiv.className = 'cost-estimate';
+            if (estimatedCost > 0.50) {
+                costEstimateDiv.classList.add('cost-warning');
+            }
+            if (estimatedCost > 1.00) {
+                costEstimateDiv.classList.add('cost-warning');
+            }
+            
+            // Enable/disable generate button
+            generateBtn.disabled = selectedTeams === 0;
+            generateBtn.textContent = selectedTeams > 0 
+                ? `🚀 Generate Schedules for ${selectedTeams} Teams` 
+                : '🚀 Start Batch Generation';
+        }
+        
+        // Preview functionality
+        document.getElementById('previewBtn').addEventListener('click', () => {
+            const selectedTeams = Array.from(checkboxes).filter(cb => cb.checked);
+            if (selectedTeams.length === 0) {
+                alert('Please select at least one team to preview.');
+                return;
+            }
+            
+            const months = monthsSelect.value;
+            const teamNames = selectedTeams.map(cb => {
+                const card = cb.closest('.team-card');
+                return card.querySelector('.team-name').textContent;
+            });
+            
+            const preview = `
+Generation Plan Preview:
+━━━━━━━━━━━━━━━━━━━━━━
+📋 Teams Selected: ${selectedTeams.length}
+📅 Months: ${months}
+💰 Estimated Cost: ${(selectedTeams.length * months * COST_PER_TEAM_MONTH).toFixed(2)}
+⏱️ Estimated Time: ${Math.ceil((selectedTeams.length * TIME_PER_TEAM) / 60)} minutes
+
+Teams to process:
+${teamNames.map(name => `• ${name}`).join('\n')}
+
+Ready to proceed?
+            `;
+            
+            if (confirm(preview)) {
+                document.getElementById('batchForm').submit();
+            }
+        });
+        
+        // Form submission with progress tracking
+        document.getElementById('batchForm').addEventListener('submit', (e) => {
+            const selectedTeams = Array.from(checkboxes).filter(cb => cb.checked);
+            if (selectedTeams.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one team.');
+                return;
+            }
+            
+            // Show progress section
+            document.getElementById('progressSection').style.display = 'block';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            // Simulate progress (in real implementation, this would be updated via WebSocket or polling)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                document.getElementById('progressFill').style.width = `${Math.min(progress, 95)}%`;
+                document.getElementById('progressText').textContent = 
+                    `Processing team ${Math.ceil(progress / (100 / selectedTeams.length))} of ${selectedTeams.length}...`;
+                
+                if (progress >= 95) {
+                    clearInterval(progressInterval);
+                    document.getElementById('progressText').textContent = 'Finalizing schedules...';
+                }
+            }, 1000);
+        });
+        
+        // Initialize
+        updateCostEstimate();
+    </script>
+</body>
+</html>
